@@ -4,7 +4,7 @@ import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 import axios from "axios";
 import App from "./App";
-import Login from "./pages/Login";
+import LoginPage from "./pages/Login";
 
 // ایجاد Context برای مدیریت منو
 const MenuContext = createContext();
@@ -66,7 +66,7 @@ const AppRouter = () => {
                     </>
                 ) : (
                     <>
-                        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+                        <Route path="/login" element={<LoginPage onLogin={handleLogin} />} />
                         <Route path="*" element={<Navigate to="/login" />} />
                     </>
                 )}
@@ -74,4 +74,5 @@ const AppRouter = () => {
         </MenuContext.Provider>
     );
 };
+
 export default AppRouter;

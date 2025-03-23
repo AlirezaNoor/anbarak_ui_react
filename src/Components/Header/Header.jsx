@@ -1,15 +1,22 @@
 
-import { useEffect, useState } from "react";
+
+
+import { useState } from "react";
+import { useMenu } from "../../AppRouter";
 
 const Header = () => {
-    const [menu, setMenu] = useState([]);
+    const { menu } = useMenu();
+    const [expandedItems, setExpandedItems] = useState({});
 
-    useEffect(() => {
-        const storedMenu = localStorage.getItem("menuNavigation");
-        if (storedMenu) {
-            setMenu(JSON.parse(storedMenu));
-        }
-    }, []);
+    // آیتم‌های سطح بالا (بدون والد) را فیلتر می‌کنیم
+    const topLevelItems = menu.filter(item => item.pid === null);
+
+    const toggleExpand = (id) => {
+        setExpandedItems(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
 
     return (
         <>
@@ -829,33 +836,47 @@ more_vert
             </div>
             <div className="sidebar-nav">
                 <ul className="metismenu" id="sidenav">
-                    {menu.map((item, index) => (
-                        <li key={index}>
-                            <a href="#" className="has-arrow">
-                                <div className="parent-icon">
-                                    <i className="material-icons-outlined">{item.icon || "menu"}</i>
-                                </div>
-                                <div className="menu-title">{item.title}</div>
-                            </a>
-                            {item.children && (
-                                <ul>
-                                    {item.children.map((child, childIndex) => (
-                                        <li key={childIndex}>
-                                            <a href={child.link}>
-                                                <i className="material-icons-outlined">arrow_left</i>
-                                                {child.title}
-                                            </a>
-                                        </li>
-                                    ))}
-                                </ul>
-                            )}
-                        </li>
-                    ))}
+                    {topLevelItems.map(parent => {
+                        // آیتم‌های زیرمجموعه را فیلتر می‌کنیم
+                        const children = menu.filter(item => item.pid === parent.id);
+                        const isExpanded = expandedItems[parent.id];
+                        return (
+                            <li key={parent.id}>
+                                <a 
+                                    href={parent.navURL ? parent.navURL : "#"} 
+                                    className={children.length > 0 ? "has-arrow" : ""}
+                                    onClick={(e) => {
+                                        if (children.length > 0) {
+                                            e.preventDefault();
+                                            toggleExpand(parent.id);
+                                        }
+                                    }}
+                                >
+                                    <div className="parent-icon">
+                                        <i className="material-icons-outlined">{parent.icon || "menu"}</i>
+                                    </div>
+                                    <div className="menu-title">{parent.name}</div>
+                                </a>
+                                {children.length > 0 && isExpanded && (
+                                    <ul>
+                                        {children.map(child => (
+                                            <li key={child.id}>
+                                                <a href={child.navURL}>
+                                                    <i className="material-icons-outlined">arrow_left</i>
+                                                    {child.name}
+                                                </a>
+                                            </li>
+                                        ))}
+                                    </ul>
+                                )}
+                            </li>
+                        );
+                    })}
                 </ul>
             </div>
         </aside>
         </>
-
+  
     );
 };
 

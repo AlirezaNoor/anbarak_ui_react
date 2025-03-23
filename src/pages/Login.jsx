@@ -1,8 +1,8 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
-const Login = () => {
+const LoginPage = ({ onLogin }) => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
@@ -22,13 +22,7 @@ const Login = () => {
 
             if (response.data.code === 200) {
                 const { accessToken, menuNavigation } = response.data.content.data;
-
-                // ذخیره توکن در localStorage
-                localStorage.setItem("accessToken", accessToken);
-                localStorage.setItem("menuNavigation", JSON.stringify(menuNavigation));
-
-                // انتقال به داشبورد
-                window.location.reload();
+                onLogin(accessToken, menuNavigation);
             } else {
                 setError("ایمیل یا رمز عبور اشتباه است.");
             }
@@ -103,4 +97,4 @@ const Login = () => {
     );
 };
 
-export default Login;
+export default LoginPage;
