@@ -1,86 +1,77 @@
-import React, {useEffect, useState} from "react";
-import {Navigate, Route, Routes, useNavigate} from "react-router-dom";
-import App from "./App";
-
+import React, { useState, useEffect, createContext, useContext } from "react";
+import { Routes, Route, Navigate, useNavigate } from "react-router-dom";
 import Cookies from "js-cookie";
-import {jwtDecode} from "jwt-decode";
+import { jwtDecode } from "jwt-decode";
+import axios from "axios";
+import App from "./App";
 import Login from "./pages/Login";
 
+// ایجاد Context برای مدیریت منو
+const MenuContext = createContext();
+export const useMenu = () => useContext(MenuContext);
+
 const AppRouter = () => {
-    const [token, setToken] = useState(Cookies.get("token_mokhatab"));
-    const [role, setRole] = useState(Cookies.get("role_mokhatab"));
-    const [userId, setUserId] = useState(Cookies.get("user_id"));
-    const [isFirstTime, setIsFirstTime] = useState(Cookies.get("isfirsttime") === "True");
     const navigate = useNavigate();
+    const [token, setToken] = useState(null);
+    const [menu, setMenu] = useState([]);
 
     useEffect(() => {
-        if (token) {
+        const storedToken = Cookies.get("accessToken") || localStorage.getItem("accessToken");
+        if (storedToken) {
             try {
-                const decodedToken = jwtDecode(token);
-
-
-
-
+                const decodedToken = jwtDecode(storedToken);
+                if (decodedToken.exp * 1000 > Date.now()) {
+                    setToken(storedToken);
+                    const storedMenu = localStorage.getItem("menuNavigation");
+                    if (storedMenu) setMenu(JSON.parse(storedMenu));
+                } else {
+                    handleLogout();
+                }
             } catch (error) {
-                console.error("Invalid token:", error);
-
+                handleLogout();
             }
         }
-    }, [token, isFirstTime]);
+    }, []);
 
-    const handleLogin = (jwtToken) => {
+    const handleLogin = (jwtToken, menuData) => {
         try {
-            const decodedToken = jwtDecode(jwtToken);
-
-
-
-                navigate("/");
-
-
+            jwtDecode(jwtToken);
+            Cookies.set("accessToken", jwtToken, { expires: 7 });
+            localStorage.setItem("accessToken", jwtToken);
+            localStorage.setItem("menuNavigation", JSON.stringify(menuData));
+            setToken(jwtToken);
+            setMenu(menuData);
+            navigate("/");
         } catch (error) {
             console.error("Login failed:", error);
         }
     };
 
-
+    const handleLogout = () => {
+        Cookies.remove("accessToken");
+        localStorage.removeItem("accessToken");
+        localStorage.removeItem("menuNavigation");
+        setToken(null);
+        setMenu([]);
+        navigate("/login");
+    };
 
     return (
-        <>
-            {token ? (
-
-                    <Routes>
-                        <Route path="/" element={<App />}>
-
-                            {/*<Route path="/team" element={<Team />} />*/}
-                            {/*<Route path="/contacts" element={<Contacts />} />*/}
-                            {/*<Route path="/invoices" element={<Invoices />} />*/}
-                            {/*<Route path="/form" element={<Form />} />*/}
-                            {/*<Route path="/calendar" element={<Calendar />} />*/}
-                            {/*<Route path="/bar" element={<Bar />} />*/}
-                            {/*<Route path="/pie" element={<Pie />} />*/}
-                            {/*<Route path="/localcontact" element={<Stream />} />*/}
-                            {/*<Route path="/localcontactList" element={<UserList/>} />*/}
-                            {/*<Route path="/line" element={<Line />} />*/}
-                            {/*<Route path="/faq" element={<FAQ />} />*/}
-                            {/*<Route path="/FavouriteContact" element={<FavouriteContact/>} />*/}
-                            {/*<Route path="/geography" element={<Geography />} />*/}
-                            {/*<Route path="/newChat/:id" element={<CreateTicket />} />*/}
-                            {/*<Route path="/chat/:id" element={<Createnew />} />*/}
-                            {/*<Route path="/createGroup" element={<CreateUserGroup />} />*/}
-                            {/*<Route path="/logout" element={<Navigate to="/login" />} />*/}
-                            {/*<Route path="*" element={<Navigate to="/" />} />*/}
-                        </Route>
-                    </Routes>
-
-            ) : (
-                <Routes>
-                    <Route path="/" element={<Navigate to="/login" />} />
-                    <Route path="/login" element={<Login onLogin={handleLogin} />} />
-                     <Route path="*" element={<Navigate to="/login" />} />
-                </Routes>
-            )}
-        </>
+        <MenuContext.Provider value={{ menu, setMenu }}>
+            <Routes>
+                {token ? (
+                    <>
+                        <Route path="/" element={<App onLogout={handleLogout} />} />
+                        <Route path="*" element={<Navigate to="/" />} />
+                    </>
+                ) : (
+                    <>
+                        <Route path="/login" element={<Login onLogin={handleLogin} />} />
+                        <Route path="*" element={<Navigate to="/login" />} />
+                    </>
+                )}
+            </Routes>
+        </MenuContext.Provider>
     );
 };
-
 export default AppRouter;
