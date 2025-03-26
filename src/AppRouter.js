@@ -33,12 +33,12 @@ const AppRouter = () => {
         }
     }, []);
 
-    const handleLogin = (jwtToken, menuData) => {
+    const handleLogin = (jwtToken, menuData ,userId) => {
         try {
             jwtDecode(jwtToken);
             Cookies.set("accessToken", jwtToken, { expires: 7 });
-            localStorage.setItem("accessToken", jwtToken);
-            localStorage.setItem("menuNavigation", JSON.stringify(menuData));
+            Cookies.set("userId", userId);
+            Cookies.set("menuNavigation", JSON.stringify(menuData));
             setToken(jwtToken);
             setMenu(menuData);
             navigate("/");

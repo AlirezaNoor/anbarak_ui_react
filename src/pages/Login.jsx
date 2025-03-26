@@ -21,8 +21,8 @@ const LoginPage = ({ onLogin }) => {
             });
 
             if (response.data.code === 200) {
-                const { accessToken, menuNavigation } = response.data.content.data;
-                onLogin(accessToken, menuNavigation);
+                const { accessToken, menuNavigation ,userId } = response.data.content.data;
+                onLogin(accessToken, menuNavigation,userId);
             } else {
                 setError("ایمیل یا رمز عبور اشتباه است.");
             }
