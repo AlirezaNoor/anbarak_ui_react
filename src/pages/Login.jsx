@@ -1,12 +1,17 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setMenu } from "../store/menuSlice";
+import { setAuth } from "../store/authSlice";
+import Cookies from "js-cookie";
 
-const LoginPage = ({ onLogin }) => {
+const LoginPage = () => {
     const [email, setEmail] = useState("");
     const [password, setPassword] = useState("");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState(null);
+    const dispatch = useDispatch();
     const navigate = useNavigate();
 
     const handleLogin = async (e) => {
@@ -21,8 +26,14 @@ const LoginPage = ({ onLogin }) => {
             });
 
             if (response.data.code === 200) {
-                const { accessToken, menuNavigation ,userId } = response.data.content.data;
-                onLogin(accessToken, menuNavigation,userId);
+                const { accessToken, menuNavigation, userId } = response.data.content.data;
+
+                dispatch(setAuth({ accessToken, userId }));
+                dispatch(setMenu(menuNavigation));
+                Cookies.set("accessToken", accessToken, { expires: 7 });
+                Cookies.set("userId", userId);
+                Cookies.set("menuNavigation", JSON.stringify(menuNavigation));
+                window.location.href="/dashboard";
             } else {
                 setError("ایمیل یا رمز عبور اشتباه است.");
             }
